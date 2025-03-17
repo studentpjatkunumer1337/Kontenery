@@ -1,6 +1,3 @@
-using System.Net;
-using System.Security.Cryptography;
-
 namespace Kontenery;
 
 public class Containers
@@ -113,7 +110,7 @@ public class Containers
             get { return "KON-G" + Id;  }
         }
 
-        public new void ClearVoid()
+        public new void ClearLoad()
         {
             LoadWeigth = (int) (LoadWeigth * 0.05);
         }
@@ -157,24 +154,24 @@ public class Containers
         int maxContainerLoad)
     {
         private static int _nextId = 0;
-        private Container[] _containers = new Container[maxContainers];
+        private Dictionary<int, Container> _containers = new Dictionary<int, Container>();
 
         public int Id { get; private set; } = _nextId++;
         public int MaxSpeed { get; } = maxSpeed;
         public int MaxContainers { get; } = maxContainers;
         public int MaxContainerload { get; } = maxContainerLoad;
-        public int ContainerCount { get; set; } = 0;
 
         public void AddContainer(Container cont)
         {
-            if (ContainerCount >= _containers.Length)
+            if (maxContainers >= _containers.Count)
                 return;
 
-            _containers[ContainerCount++] = cont;
+            _containers[cont.Id] = cont;
         }
 
-        public void RemoveContainer(Container cont)
+        public void RemoveContainer(int id)
         {
+            _containers.Remove(id);
         }
     }
 

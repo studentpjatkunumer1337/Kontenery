@@ -8,32 +8,33 @@ class CommandLine
     
     static void ShowState()
     {
-        Console.WriteLine("Lista kontenerowców:");
-        if (manager.ContainerShips.Length <= 0)
-        {
-            Console.WriteLine("Brak");
-        }
-        else
-        {
-            foreach (var ship in manager.ContainerShips)
-            {
-                Console.WriteLine(ship);
-            }
-        }
-        Console.WriteLine();
-        Console.WriteLine("Lista kontenerów:");
-        if (manager.Containers.Length <= 0)
-        {
-            Console.WriteLine("Brak");
-        }
-        else
-        {
-            foreach (var container in manager.Containers)
-            {
-                Console.WriteLine(container);
-            }
-        }
-        Console.WriteLine();
+        // Przestało mi sie chcieć pisać frontend
+        //Console.WriteLine("Lista kontenerowców:");
+        //if (manager.ShipCount <= 0)
+        //{
+        //    Console.WriteLine("Brak");
+        //}
+        //else
+        //{
+        //    foreach (var ship in manager.ContainerShips)
+        //    {
+        //        Console.WriteLine(ship);
+        //    }
+        //}
+        //Console.WriteLine();
+        //Console.WriteLine("Lista kontenerów:");
+        //if (manager.Containers.Length <= 0)
+        //{
+        //    Console.WriteLine("Brak");
+        //}
+        //else
+        //{
+        //    foreach (var container in manager.Containers)
+        //    {
+        //        Console.WriteLine(container);
+        //    }
+        //}
+        //Console.WriteLine();
     }
 
     public enum MenuEntry
@@ -147,7 +148,39 @@ class CommandLine
         }
         
         Console.Write("Podaj maksymalne załadowanie kontenera: ");
-        Console.Write
+        string? stringMaxContainerLoad = Console.ReadLine();
+        Console.Write("Podaj wysokość kontenera: ");
+        string? stringHeight = Console.ReadLine();
+        Console.Write("Podaj wage samego kontenera: ");
+        string? stringContainerWeight = Console.ReadLine();
+        Console.Write("Podaj głębokość kontenera: ");
+        string? stringDepth = Console.ReadLine();
+        Console.Write("Podaj maksymalny załadunek kontenera: ");
+        string? stringMaxLoad = Console.ReadLine();
+        if (stringMaxContainerLoad == null || stringHeight == null || stringContainerWeight == null || stringDepth == null || stringMaxLoad == null)
+        {
+            Console.WriteLine("Nieprawidłowe wejście");
+            return;
+        }
+
+        int maxContainerLoad;
+        int height;
+        int containerWeight;
+        int depth;
+        int maxLoad;
+
+        Int32.TryParse(stringMaxContainerLoad, out maxContainerLoad);
+        Int32.TryParse(stringHeight, out height);
+        Int32.TryParse(stringContainerWeight, out containerWeight);
+        Int32.TryParse(stringDepth, out depth);
+
+
+        if (containerType == "1")
+        {
+            Console.Write("Podaj czy kontener jest niebezpieczny (1 tak, 0 nie): ");
+            string? stringDangerous = Console.ReadLine();
+
+        }
     }
 
     static void DispatchOperation(MenuEntry op)
