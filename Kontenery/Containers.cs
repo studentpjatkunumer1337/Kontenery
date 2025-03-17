@@ -1,6 +1,9 @@
-﻿namespace Kontenery;
+using System.Net;
+using System.Security.Cryptography;
 
-class Kontenery
+namespace Kontenery;
+
+public class Containers
 {
     public enum CooledProduct
     {
@@ -42,7 +45,7 @@ class Kontenery
         void InformOfDanger();
     }
     
-    abstract class Container(int loadWeigth, int heigth, int containerWeight, int depth, int maxLoad)
+    public abstract class Container(int loadWeigth, int heigth, int containerWeight, int depth, int maxLoad)
     {
         private static int _nextId = 0;
         
@@ -68,7 +71,7 @@ class Kontenery
         }
     }
 
-    class LiquidContainer(
+    public class LiquidContainer(
         int loadWeigth,
         int heigth,
         int containerWeight,
@@ -94,11 +97,11 @@ class Kontenery
         
         public void InformOfDanger()
         {
-            Console.WriteLine("Trying to perform a dangerous operation");
+            Console.WriteLine("Próbowano wykonać potencjalnie niebezpieczną operację");
         }
     }
 
-    class GasContainer(
+    public class GasContainer(
         int loadWeigth,
         int heigth,
         int containerWeight,
@@ -117,11 +120,11 @@ class Kontenery
         
         public void InformOfDanger()
         {
-            Console.WriteLine("Trying to perform a dangerous operation in container {0}", SerialNumber);
+            Console.WriteLine("Próbowano wykonać potencjalnie niebezpieczną operację na kontenerze {0}", SerialNumber);
         }
     }
 
-    class CooledContainer(
+    public class CooledContainer(
         int loadWeigth,
         int heigth,
         int containerWeight,
@@ -148,72 +151,60 @@ class Kontenery
         }
     }
 
-    class ContainerShip
+    public class ContainerShip(
+        int maxSpeed,
+        int maxContainers,
+        int maxContainerLoad)
     {
+        private static int _nextId = 0;
+        private Container[] _containers = new Container[maxContainers];
+
+        public int Id { get; private set; } = _nextId++;
+        public int MaxSpeed { get; } = maxSpeed;
+        public int MaxContainers { get; } = maxContainers;
+        public int MaxContainerload { get; } = maxContainerLoad;
+        public int ContainerCount { get; set; } = 0;
+
+        public void AddContainer(Container cont)
+        {
+            if (ContainerCount >= _containers.Length)
+                return;
+
+            _containers[ContainerCount++] = cont;
+        }
+
+        public void RemoveContainer(Container cont)
+        {
+        }
+    }
+
+    public class ContainerManager
+    {
+        private List<ContainerShip> _containerShips = new();
+        private List<Container> _containers = new();
+
+        public int ShipCount
+        {
+            get => _containerShips.Count;
+        }
         
+        public int ContainerCount
+        {
+            get => _containers.Count;
+        }
+
+        public void AddShip(ContainerShip ship)
+        {
+            _containerShips.Add(ship);
+        }
+
+        public void RemoveShip(int id)
+        {
+            if (_containerShips.Count < id)
+                return;
+
+            _containerShips.RemoveAt(id);
+        }
     }
 
-    class ContainerManager
-    {
-        public ContainerShip[] ContainerShips { get; } = [];
-        public Container[] Containers { get; } = [];
-    }
-
-    private static ContainerManager manager = new ContainerManager();
-    
-    static void ShowState()
-    {
-        Console.WriteLine("Lista kontenerowców:");
-        if (manager.ContainerShips.Length <= 0)
-        {
-            Console.WriteLine("Brak");
-        }
-        else
-        {
-            foreach (var ship in manager.ContainerShips)
-            {
-                Console.WriteLine(ship);
-            }
-        }
-        Console.WriteLine();
-        Console.WriteLine("Lista kontenerów:");
-        if (manager.Containers.Length <= 0)
-        {
-            Console.WriteLine("Brak");
-        }
-        else
-        {
-            foreach (var container in manager.Containers)
-            {
-                Console.WriteLine(container);
-            }
-        }
-        Console.WriteLine();
-    }
-
-    static int GetMenuEntry()
-    {
-        int entries = 1;
-        Console.WriteLine("Możliwe akcje:");
-        Console.WriteLine("{0}. Dodaj kontenerowiec", entries++);
-        if (manager.ContainerShips.Length > 0)
-        {
-            Console.WriteLine("{0}. Usuń kontenerowiec", entries++);
-            Console.WriteLine("{0}. Dodaj kontener", entries++);
-        }
-        if (manager.Containers.Length > 0)
-        {
-            Console.WriteLine("{0}. Usun kontener", entries++);
-            Console.WriteLine("{0}. Przypisz kontener", entries++);
-            Console.WriteLine("{0}. Odpisz kontener", entries++);
-        }
-        Console.Write("Opcja: ");
-        string? answer = Console.ReadLine();
-    }
-
-    static void Main(string[] args)
-    {
-        ShowState();
-        // GetMenuChoice()
-    }
 }
