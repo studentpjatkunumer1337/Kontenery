@@ -8,33 +8,32 @@ class CommandLine
     
     static void ShowState()
     {
-        // Przestało mi sie chcieć pisać frontend
-        //Console.WriteLine("Lista kontenerowców:");
-        //if (manager.ShipCount <= 0)
-        //{
-        //    Console.WriteLine("Brak");
-        //}
-        //else
-        //{
-        //    foreach (var ship in manager.ContainerShips)
-        //    {
-        //        Console.WriteLine(ship);
-        //    }
-        //}
-        //Console.WriteLine();
-        //Console.WriteLine("Lista kontenerów:");
-        //if (manager.Containers.Length <= 0)
-        //{
-        //    Console.WriteLine("Brak");
-        //}
-        //else
-        //{
-        //    foreach (var container in manager.Containers)
-        //    {
-        //        Console.WriteLine(container);
-        //    }
-        //}
-        //Console.WriteLine();
+        Console.WriteLine("Lista kontenerowców:");
+        if (manager.ShipCount <= 0)
+        {
+            Console.WriteLine("Brak");
+        }
+        else
+        {
+            foreach (var ship in manager.Ships)
+            {
+                Console.WriteLine(ship.ToString());
+            }
+        }
+        Console.WriteLine();
+        Console.WriteLine("Lista kontenerów:");
+        if (manager.ContainerCount <= 0)
+        {
+            Console.WriteLine("Brak");
+        }
+        else
+        {
+            foreach (var container in manager.Containers)
+            {
+                Console.WriteLine(container.ToString());
+            }
+        }
+        Console.WriteLine();
     }
 
     public enum MenuEntry
@@ -66,7 +65,6 @@ class CommandLine
         }
         Console.WriteLine("{0}. Wyjdź", entries++);
         Console.Write("Opcja: ");
-        Console.WriteLine();
         string? answer = Console.ReadLine();
         if (answer == null)
         {
@@ -84,7 +82,39 @@ class CommandLine
             Environment.Exit(1);
         }
 
-        return (MenuEntry)choice;
+        if (entries == 3)
+        {
+            return choice switch
+            {
+                1 => MenuEntry.AddContainerShip,
+                2 => MenuEntry.Exit
+            };
+        }
+        else if (entries == 5)
+        {
+            return choice switch
+            {
+                1 => MenuEntry.AddContainerShip,
+                2 => MenuEntry.RemoveContainerShip,
+                3 => MenuEntry.AddContainer,
+                4 => MenuEntry.Exit
+            };
+        } 
+        else if (entries == 8)
+        {
+            return choice switch
+            {
+                1 => MenuEntry.AddContainerShip,
+                2 => MenuEntry.RemoveContainerShip,
+                3 => MenuEntry.AddContainer,
+                4 => MenuEntry.RemoveContainer,
+                5 => MenuEntry.AssignContainer,
+                6 => MenuEntry.DeassignContainer,
+                7 => MenuEntry.Exit
+            };
+        }
+
+        throw new NotImplementedException();
     }
 
     static void AddContainerShip()
@@ -131,9 +161,9 @@ class CommandLine
     static void AddContainer()
     {
         Console.WriteLine("Typy kontenerów:");
-        Console.WriteLine("1. Kontener na płyny:");
-        Console.WriteLine("2. Kontener na gazy:");
-        Console.WriteLine("3. Kontener na mrożone:");
+        Console.WriteLine("1. Kontener na płyny");
+        Console.WriteLine("2. Kontener na gazy");
+        Console.WriteLine("3. Kontener na mrożone");
         Console.Write("Podaj typ kontenera: ");
         string? containerType = Console.ReadLine();
 
@@ -141,7 +171,7 @@ class CommandLine
             return;
 
 
-        if (containerType != "1" || containerType != "2" || containerType != "3")
+        if (containerType != "1" && containerType != "2" && containerType != "3")
         {
             Console.WriteLine("Nieprawidłowe wejście");
             return;
@@ -173,14 +203,75 @@ class CommandLine
         Int32.TryParse(stringHeight, out height);
         Int32.TryParse(stringContainerWeight, out containerWeight);
         Int32.TryParse(stringDepth, out depth);
-
+        Int32.TryParse(stringDepth, out maxLoad);
 
         if (containerType == "1")
         {
-            Console.Write("Podaj czy kontener jest niebezpieczny (1 tak, 0 nie): ");
+            Console.Write("Podaj czy kontener jest niebezpieczny (true/false): ");
             string? stringDangerous = Console.ReadLine();
-
+            bool dangerous;
+            Boolean.TryParse(stringDangerous, out dangerous);
+            manager.AddContainer(new LiquidContainer(maxContainerLoad, height, containerWeight, depth, maxLoad,
+                dangerous));
         }
+        else if (containerType == "2")
+        {
+            Console.Write("Podaj atmosfery kontenera: ");
+            string? stringAtmospheres = Console.ReadLine();
+            int atmospheres;
+            Int32.TryParse(stringAtmospheres, out atmospheres);
+            manager.AddContainer(new GasContainer(maxContainerLoad, height, containerWeight, depth, maxLoad,
+                atmospheres));
+        }
+        else if (containerType == "3")
+        {
+            Console.Write("Typy produktów w kontenerze:");
+            Console.WriteLine(" - Bananas");
+            Console.WriteLine(" - Chocolate");
+            Console.WriteLine(" - Fish");
+            Console.WriteLine(" - Meat");
+            Console.WriteLine(" - IceCream");
+            Console.WriteLine(" - FrozenPizza");
+            Console.WriteLine(" - Cheese");
+            Console.WriteLine(" - Sausages");
+            Console.WriteLine(" - Butter");
+            Console.WriteLine(" - Eggs");
+            Console.Write("Podaj jedna z tych nazw: ");
+            string? choice = Console.ReadLine();
+            CooledProduct product;
+            Enum.TryParse(choice, out product);
+            Console.Write("Podaj minimalna temperature kontenera: ");
+            string? stringTemperature = Console.ReadLine();
+            double temperature;
+            Double.TryParse(stringTemperature, out temperature);
+            manager.AddContainer(new CooledContainer(maxContainerLoad, height, containerWeight, depth, maxLoad,
+                product, temperature));
+        }
+    }
+
+    static void RemoveContainer()
+    {
+        Console.Write("Podaj identyfikator kontenera: ");
+        string? stringId = Console.ReadLine();
+        int id;
+        Int32.TryParse(stringId, out id);
+        manager.RemoveContainer(id);
+    }
+
+    static void AssignContainer()
+    {
+        Console.Write("Podaj identyfikator kontenera do przypisania: ");
+        int containerId = Utils.ReadInt();
+        Console.Write("Podaj identyfikator statku do przypisania: ");
+        int shipId = Utils.ReadInt();
+        manager.AssignContainer(containerId, shipId);
+    }
+
+    static void DeassignContainer()
+    {
+        Console.Write("Podaj identyfikator kontenera do od-przypisania: ");
+        int containerId = Utils.ReadInt();
+        manager.DeassignContainer(containerId);
     }
 
     static void DispatchOperation(MenuEntry op)
@@ -213,7 +304,10 @@ class CommandLine
 
     static void Main(string[] args)
     {
-        ShowState();
-        DispatchOperation(GetMenuEntry());
+        while (true)
+        {
+            ShowState();
+            DispatchOperation(GetMenuEntry());
+        }
     }
 }

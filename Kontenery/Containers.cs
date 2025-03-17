@@ -1,3 +1,5 @@
+using System.Collections;
+
 namespace Kontenery;
 
 public class Containers
@@ -44,7 +46,7 @@ public class Containers
     
     public abstract class Container(int loadWeigth, int heigth, int containerWeight, int depth, int maxLoad)
     {
-        private static int _nextId = 0;
+        private static int _nextId = 1;
         
         public int Id { get; private set; } = _nextId++;
         public int LoadWeigth { get; protected set; } = loadWeigth;
@@ -52,7 +54,8 @@ public class Containers
         public int ContainerWeight { get; } = containerWeight;
         public int Depth { get; } = depth;
         public int MaxLoad { get; } = maxLoad;
-        public string SerialNumber { get; }
+        public virtual string SerialNumber { get; }
+        public int ShipId { get; set; }
 
         public void AddLoad(int load)
         {
@@ -66,6 +69,14 @@ public class Containers
         {
             LoadWeigth = 0;
         }
+
+        public new string ToString()
+        {
+            return String.Format(
+                "Kontener {0}: załadowanie = {1}, wysokość = {2}, tara = {3}, głębokość = {4}, ładowność = {5}, numer seryjny = {6}",
+                Id, LoadWeigth, Height, ContainerWeight, Depth, MaxLoad, SerialNumber)
+                + ((ShipId != 0 ? (", przypisano do statku " + ShipId) : ""));
+        }
     }
 
     public class LiquidContainer(
@@ -78,9 +89,9 @@ public class Containers
     {
         public bool Dangerous { get; } = dangerous;
 
-        public new string SerialNumber
+        public override string SerialNumber
         {
-            get { return "KON-L" + Id;  }
+            get { return "KON-L-" + Id;  }
         }
 
         public new void AddLoad(int load)
@@ -96,6 +107,11 @@ public class Containers
         {
             Console.WriteLine("Próbowano wykonać potencjalnie niebezpieczną operację");
         }
+
+        public new string ToString()
+        {
+            return base.ToString() + (Dangerous ? ", niebezpieczny" : "");
+        }
     }
 
     public class GasContainer(
@@ -103,11 +119,14 @@ public class Containers
         int heigth,
         int containerWeight,
         int depth,
-        int maxLoad) : Container(loadWeigth, heigth, containerWeight, depth, maxLoad), IHazardNotifier
+        int maxLoad,
+        int atmospheres) : Container(loadWeigth, heigth, containerWeight, depth, maxLoad), IHazardNotifier
     {
-        public new string SerialNumber
+        public int Atmospheres { get; } = atmospheres;
+
+        public override string SerialNumber
         {
-            get { return "KON-G" + Id;  }
+            get { return "KON-G-" + Id;  }
         }
 
         public new void ClearLoad()
@@ -118,6 +137,11 @@ public class Containers
         public void InformOfDanger()
         {
             Console.WriteLine("Próbowano wykonać potencjalnie niebezpieczną operację na kontenerze {0}", SerialNumber);
+        }
+
+        public new string ToString()
+        {
+            return base.ToString() + (", atmosfery: " + Atmospheres);
         }
     }
 
@@ -133,9 +157,9 @@ public class Containers
         public double Temperature { get; set; } = temperature;
         public CooledProduct Product { get; } = productKind;
         
-        public new string SerialNumber
+        public override string SerialNumber
         {
-            get { return "KON-C" + Id;  }
+            get { return "KON-C-" + Id;  }
         }
 
         // Założenie jest takie że zawsze dodajemy produkty tego samego typu
@@ -146,6 +170,11 @@ public class Containers
             
             base.AddLoad(load);
         }
+
+        public new string ToString()
+        {
+            return base.ToString() + (", produkt: " + Product) + (", temperatura: " + Temperature);
+        }
     }
 
     public class ContainerShip(
@@ -153,13 +182,14 @@ public class Containers
         int maxContainers,
         int maxContainerLoad)
     {
-        private static int _nextId = 0;
+            
+        private static int _nextId = 1;
         private Dictionary<int, Container> _containers = new Dictionary<int, Container>();
 
         public int Id { get; private set; } = _nextId++;
         public int MaxSpeed { get; } = maxSpeed;
         public int MaxContainers { get; } = maxContainers;
-        public int MaxContainerload { get; } = maxContainerLoad;
+        public int MaxContainerLoad { get; } = maxContainerLoad;
 
         public void AddContainer(Container cont)
         {
@@ -173,22 +203,22 @@ public class Containers
         {
             _containers.Remove(id);
         }
+
+        public new string ToString()
+        {
+            return String.Format(
+                "Statek {0}: prędkość = {1}, maksymalna ilość kontenerów = {2}, maksymalna ładowność = {3}",
+                Id, MaxSpeed, MaxContainers, MaxContainerLoad);
+        }
     }
 
-    public class ContainerManager
+    public class ContainerManager : IEnumerable<ContainerShip>, IEnumerable<Container>
     {
         private List<ContainerShip> _containerShips = new();
         private List<Container> _containers = new();
 
-        public int ShipCount
-        {
-            get => _containerShips.Count;
-        }
-        
-        public int ContainerCount
-        {
-            get => _containers.Count;
-        }
+        public int ShipCount => _containerShips.Count;
+        public int ContainerCount => _containers.Count;
 
         public void AddShip(ContainerShip ship)
         {
@@ -198,10 +228,60 @@ public class Containers
         public void RemoveShip(int id)
         {
             if (_containerShips.Count < id)
-                return;
+                throw new IndexOutOfRangeException();
 
-            _containerShips.RemoveAt(id);
+            _containerShips.RemoveAt(id - 1);
+        }
+
+        public void AddContainer(Container cont)
+        {
+            _containers.Add(cont);
+        }
+
+        public void RemoveContainer(int id)
+        {
+            if (_containers.Count < id)
+                throw new IndexOutOfRangeException();
+
+            _containers.RemoveAt(id - 1);
+        }
+
+        public void AssignContainer(int src, int dst)
+        {
+            Container c = _containers[src - 1];
+            c.ShipId = dst;
+            _containerShips[dst - 1].AddContainer(_containers[src - 1]);
+        }
+
+        public void DeassignContainer(int src)
+        {
+            int id = _containers[src - 1].ShipId;
+            _containerShips[id - 1].RemoveContainer(src - 1);
+            _containers[src - 1].ShipId = 0;
+        }
+        
+        IEnumerator<Container> IEnumerable<Container>.GetEnumerator()
+        {
+            foreach (var container in _containers)
+            {
+                yield return container;
+            }
+        }
+
+        public IEnumerable<Container> Containers { get => this; }
+        public IEnumerable<ContainerShip> Ships { get => this; }
+        
+        IEnumerator<ContainerShip> IEnumerable<ContainerShip>.GetEnumerator()
+        {
+            foreach (var ship in _containerShips)
+            {
+                yield return ship;
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            throw new NotImplementedException();
         }
     }
-
 }
